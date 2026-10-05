@@ -68,4 +68,4 @@ File da tenere allineati con `~/Desktop/api/src/mcp/`:
 - `src/middleware/auth.ts` ↔ `api/src/middleware/auth.ts` (`createAuth`/`mcpAuth`)
 
 L'unico file volutamente divergente è `src/mcp/client.ts` (fetch remoto vs
-`app.request()` in-process)
+`app.request()` in-process).
