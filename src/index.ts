@@ -16,43 +16,41 @@ import { createMcpServer } from "./mcp/server";
  * rate limit continuano ad applicarsi lato API.
  *
  * Layout:
- * - POST /mcp   → MCP server (uno McpServer + transport per request)
+ * - POST /       → MCP server (uno McpServer + transport per request)
  * - GET  /health → liveness, senza auth
  * - GET  /.well-known/oauth-protected-resource → discovery RFC 9728:
- *          dichiara qual è la resource (/mcp di QUESTO worker) e quale
+ *          dichiara qual è la resource (/ di QUESTO worker) e quale
  *          authorization server la protegge (l'API Wrapper).
  */
 const app = new Hono<{ Bindings: Env; Variables: AppVariables }>();
 
 app.get("/health", (c) => c.json({ ok: true, service: "michelangelo-mcp" }));
 
-// RFC 9728 — protected-resource metadata. `resource` è l'/mcp di questo
+// RFC 9728 — protected-resource metadata. `resource` è la root di questo
 // Worker (derivato dall'origin della request: funziona su workers.dev oggi
-// e sul dominio custom domani); l'authorization server resta l'API Wrapper.
+// e sul dominio custom mcp.michelangelo.land domani); l'authorization server
+// resta l'API Wrapper.
 app.get("/.well-known/oauth-protected-resource", (c) => {
   const origin = new URL(c.req.url).origin;
   return c.json({
-    resource: `${origin}/mcp`,
+    resource: origin,
     authorization_servers: [c.env.API_BASE_URL],
     scopes_supported: ["email"],
     bearer_methods_supported: ["header"],
   });
 });
 
-const mcp = new Hono<{ Bindings: Env; Variables: AppVariables }>()
-  .use("*", cors())
-  .use("*", mcpAuth)
-  .all("/", async (c) => {
-    const user = c.get("user");
-    const api = new ApiClient(c.env.API_BASE_URL, user.token);
-    const server = createMcpServer(api);
-    const transport = new WebStandardStreamableHTTPServerTransport({
-      enableJsonResponse: true,
-    });
-    await server.connect(transport);
-    return await transport.handleRequest(c.req.raw);
+// MCP in root (mcp.michelangelo.land, senza suffisso /mcp): middleware
+// applicati solo a "/" così /health e /.well-known restano pubblici.
+app.all("/", cors(), mcpAuth, async (c) => {
+  const user = c.get("user");
+  const api = new ApiClient(c.env.API_BASE_URL, user.token);
+  const server = createMcpServer(api);
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    enableJsonResponse: true,
   });
-
-app.route("/mcp", mcp);
+  await server.connect(transport);
+  return await transport.handleRequest(c.req.raw);
+});
 
 export default app;

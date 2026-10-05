@@ -42,7 +42,7 @@ function getJwks(supabaseUrl: string) {
 }
 
 /**
- * JWT auth per /mcp — 401 con `WWW-Authenticate: Bearer resource_metadata=…`
+ * JWT auth per / (root) — 401 con `WWW-Authenticate: Bearer resource_metadata=…`
  * (MCP spec 2025-06-18 / RFC 9728) così i client scoprono il flusso OAuth.
  * L'URL del metadata document è same-origin (servito da questo stesso Worker
  * in `src/index.ts`), quindi sopravvive al cambio di dominio senza env.

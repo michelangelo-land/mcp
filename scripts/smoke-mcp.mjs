@@ -1,9 +1,9 @@
 /**
  * Smoke test per michelangelo-mcp (standalone).
- * Uso: MCP_URL=http://localhost:8787/mcp TOKEN=<jwt> node scripts/smoke-mcp.mjs
+ * Uso: MCP_URL=http://localhost:8787 TOKEN=<jwt> node scripts/smoke-mcp.mjs
  * Verifica: initialize → tools/list (6 tool attesi) → tools/call whoami.
  */
-const MCP_URL = process.env.MCP_URL ?? "http://localhost:8787/mcp";
+const MCP_URL = process.env.MCP_URL ?? "http://localhost:8787";
 const TOKEN = process.env.TOKEN;
 
 if (!TOKEN) {
@@ -37,7 +37,7 @@ const prRes = await fetch(`${origin}/.well-known/oauth-protected-resource`);
 const pr = await prRes.json();
 assert(prRes.ok, `protected-resource HTTP ${prRes.status}`);
 assert(
-  pr.resource === `${origin}/mcp`,
+  pr.resource === origin,
   `resource inattesa: ${pr.resource}`,
 );
 console.log(`discovery: resource=${pr.resource}`);

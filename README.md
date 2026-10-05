@@ -26,8 +26,8 @@ evaluation e rate limit continuano ad applicarsi lato API.
 2. **`src/middleware/auth.ts`** — copia ridotta di `api/src/middleware/auth.ts`:
    solo `SUPABASE_URL` + `API_BASE_URL`; il 401 annuncia il protected-resource
    document same-origin servito da questo stesso Worker.
-3. **`src/index.ts`** — solo `/mcp` + `/health`, nessuna route `/v1`, `/auth`,
-   `/oauth`, `/.well-known`.
+3. **`src/index.ts`** — solo `/` (MCP in root) + `/health`, nessuna route `/v1`, `/auth`,
+   `/oauth`.
 4. **`wait_for_job`** — ogni poll è ora una subrequest reale (~4-5 per 50s,
    ok sotto il limite 1000). Per build lunghe usare re-call con
    `maxWaitSeconds` piccolo (pattern `done:false`).
@@ -44,7 +44,7 @@ npm run dev                      # wrangler dev → http://localhost:8787
 Smoke test contro un'istanza (di default il dev locale):
 
 ```bash
-MCP_URL=http://localhost:8787/mcp TOKEN=<supabase-jwt> node scripts/smoke-mcp.mjs
+MCP_URL=http://localhost:8787 TOKEN=<supabase-jwt> node scripts/smoke-mcp.mjs
 ```
 
 ## Deploy
