@@ -1,0 +1,25 @@
+name = "michelangelo-mcp"
+main = "src/index.ts"
+compatibility_date = "2026-07-30"
+workers_dev = true
+
+# Dominio pubblico suggerito (ADR D3: il wrapper resta l'unica origin visibile).
+# Abilitare quando la zona DNS è pronta:
+# routes = [
+#   { pattern = "mcp.michelangelo.land", custom_domain = true }
+# ]
+
+# Config non-secret. Il Bearer utente fa passthrough verso l'API — questo
+# Worker non ha segreti propri (la validazione JWT usa la JWKS pubblica).
+[vars]
+# Base URL dell'API pubblica (contratto: michelangelo-api/openapi/v1.yaml).
+API_BASE_URL = "https://api.michelangelo.land"
+# Metadata RFC 9728 annunciata nei 401 di /mcp (deve puntare al
+# protected-resource document che dichiara `resource` = URL di QUESTO /mcp).
+# Finché il DNS non è attivo, punta al documento ospitato dall'API.
+MCP_RESOURCE_METADATA_URL = "https://api.michelangelo.land/.well-known/oauth-protected-resource"
+SUPABASE_URL = "https://hwtolnqskgrdgqpacdpi.supabase.co"
+
+[observability.logs]
+enabled = false
+invocation_logs = true
