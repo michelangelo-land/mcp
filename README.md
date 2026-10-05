@@ -27,7 +27,8 @@ evaluation e rate limit continuano ad applicarsi lato API.
    solo `SUPABASE_URL` + `API_BASE_URL`; il 401 annuncia il protected-resource
    document same-origin servito da questo stesso Worker.
 3. **`src/index.ts`** — solo `/` (MCP in root) + `/health`, nessuna route `/v1`, `/auth`,
-   `/oauth`.
+   `/oauth`. `GET /` da browser (senza Bearer, `Accept: text/html`) mostra una
+   landing HTML; i client MCP usano `POST /` con Bearer (401 senza token).
 4. **`wait_for_job`** — ogni poll è ora una subrequest reale (~4-5 per 50s,
    ok sotto il limite 1000). Per build lunghe usare re-call con
    `maxWaitSeconds` piccolo (pattern `done:false`).
