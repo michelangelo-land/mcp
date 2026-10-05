@@ -5,10 +5,10 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
  * Auth middleware — copia mirata di michelangelo-api/src/middleware/auth.ts.
  *
  * Differenze rispetto all'originale:
- * - Env ridotto: solo SUPABASE_URL (+ MCP_RESOURCE_METADATA_URL per il 401).
- * - `mcpAuth` legge l'URL del protected-resource document da env invece di
- *   averlo hardcoded (il nuovo Worker può vivere su un host diverso da
- *   api.michelangelo.land).
+ * - Env ridotto: solo SUPABASE_URL (+ API_BASE_URL per il discovery).
+ * - `mcpAuth` deriva l'URL del protected-resource document dall'origin della
+ *   request (same-origin) invece di averlo hardcoded: sopravvive al cambio
+ *   di dominio senza env da mantenere.
  */
 
 export interface AuthUser {
@@ -22,7 +22,6 @@ export interface AuthUser {
 export interface Env {
   SUPABASE_URL: string;
   API_BASE_URL: string;
-  MCP_RESOURCE_METADATA_URL: string;
 }
 
 export interface AppVariables {
@@ -45,15 +44,18 @@ function getJwks(supabaseUrl: string) {
 /**
  * JWT auth per /mcp — 401 con `WWW-Authenticate: Bearer resource_metadata=…`
  * (MCP spec 2025-06-18 / RFC 9728) così i client scoprono il flusso OAuth.
+ * L'URL del metadata document è same-origin (servito da questo stesso Worker
+ * in `src/index.ts`), quindi sopravvive al cambio di dominio senza env.
  */
 export const mcpAuth = createMiddleware<{
   Bindings: Env;
   Variables: AppVariables;
 }>(async (c, next) => {
   const unauthorized = (body: { code: string; message: string }) => {
+    const origin = new URL(c.req.url).origin;
     c.header(
       "WWW-Authenticate",
-      `Bearer resource_metadata="${c.env.MCP_RESOURCE_METADATA_URL}"`,
+      `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`,
     );
     return c.json(body, 401);
   };

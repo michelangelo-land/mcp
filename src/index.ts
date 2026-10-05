@@ -18,10 +18,26 @@ import { createMcpServer } from "./mcp/server";
  * Layout:
  * - POST /mcp   → MCP server (uno McpServer + transport per request)
  * - GET  /health → liveness, senza auth
+ * - GET  /.well-known/oauth-protected-resource → discovery RFC 9728:
+ *          dichiara qual è la resource (/mcp di QUESTO worker) e quale
+ *          authorization server la protegge (l'API Wrapper).
  */
 const app = new Hono<{ Bindings: Env; Variables: AppVariables }>();
 
 app.get("/health", (c) => c.json({ ok: true, service: "michelangelo-mcp" }));
+
+// RFC 9728 — protected-resource metadata. `resource` è l'/mcp di questo
+// Worker (derivato dall'origin della request: funziona su workers.dev oggi
+// e sul dominio custom domani); l'authorization server resta l'API Wrapper.
+app.get("/.well-known/oauth-protected-resource", (c) => {
+  const origin = new URL(c.req.url).origin;
+  return c.json({
+    resource: `${origin}/mcp`,
+    authorization_servers: [c.env.API_BASE_URL],
+    scopes_supported: ["email"],
+    bearer_methods_supported: ["header"],
+  });
+});
 
 const mcp = new Hono<{ Bindings: Env; Variables: AppVariables }>()
   .use("*", cors())

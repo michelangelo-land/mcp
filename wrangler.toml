@@ -11,13 +11,12 @@ workers_dev = true
 
 # Config non-secret. Il Bearer utente fa passthrough verso l'API — questo
 # Worker non ha segreti propri (la validazione JWT usa la JWKS pubblica).
+# Il discovery RFC 9728 è self-hosted (/.well-known/oauth-protected-resource,
+# same-origin), quindi nessun URL da mantenere al cambio di dominio.
 [vars]
 # Base URL dell'API pubblica (contratto: michelangelo-api/openapi/v1.yaml).
+# Usato sia come target dei tool sia come authorization_server nel discovery.
 API_BASE_URL = "https://api.michelangelo.land"
-# Metadata RFC 9728 annunciata nei 401 di /mcp (deve puntare al
-# protected-resource document che dichiara `resource` = URL di QUESTO /mcp).
-# Finché il DNS non è attivo, punta al documento ospitato dall'API.
-MCP_RESOURCE_METADATA_URL = "https://api.michelangelo.land/.well-known/oauth-protected-resource"
 SUPABASE_URL = "https://hwtolnqskgrdgqpacdpi.supabase.co"
 
 [observability.logs]

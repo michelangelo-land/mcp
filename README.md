@@ -24,8 +24,8 @@ evaluation e rate limit continuano ad applicarsi lato API.
 1. **`src/mcp/client.ts`** — prima wrapper su `app.request()` in-process (zero
    rete); ora `fetch(API_BASE_URL + path)` con passthrough del Bearer.
 2. **`src/middleware/auth.ts`** — copia ridotta di `api/src/middleware/auth.ts`:
-   solo `SUPABASE_URL` + `MCP_RESOURCE_METADATA_URL` (il 401 annuncia il
-   protected-resource document di env, non più hardcoded).
+   solo `SUPABASE_URL` + `API_BASE_URL`; il 401 annuncia il protected-resource
+   document same-origin servito da questo stesso Worker.
 3. **`src/index.ts`** — solo `/mcp` + `/health`, nessuna route `/v1`, `/auth`,
    `/oauth`, `/.well-known`.
 4. **`wait_for_job`** — ogni poll è ora una subrequest reale (~4-5 per 50s,
@@ -56,11 +56,8 @@ npm run deploy   # → michelangelo-mcp.<account>.workers.dev
 Poi (quando pronto il DNS):
 
 1. Aggiungere la route `mcp.michelangelo.land` in `wrangler.toml`.
-2. Pubblicare un `/.well-known/oauth-protected-resource` il cui `resource`
-   sia `https://mcp.michelangelo.land/mcp` e puntare `MCP_RESOURCE_METADATA_URL`
-   a quell'URL (oggi punta al documento dell'API che dichiara `/mcp` su
-   `api.michelangelo.land` — va aggiornato al cutover, altrimenti i client
-   scoprono l'endpoint sbagliato).
+2. Nessun cambio discovery: `/.well-known/oauth-protected-resource` e il
+   `WWW-Authenticate` dei 401 sono same-origin e seguono il dominio da soli.
 3. Allineare `API_BASE_URL` a produzione.
 
 ## Sincronizzazione col monolite

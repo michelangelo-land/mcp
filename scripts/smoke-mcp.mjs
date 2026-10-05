@@ -32,8 +32,17 @@ const rpc = async (method, params, id) => {
   return body.result;
 };
 
-const init = await rpc(
-  "initialize",
+const origin = new URL(MCP_URL).origin;
+const prRes = await fetch(`${origin}/.well-known/oauth-protected-resource`);
+const pr = await prRes.json();
+assert(prRes.ok, `protected-resource HTTP ${prRes.status}`);
+assert(
+  pr.resource === `${origin}/mcp`,
+  `resource inattesa: ${pr.resource}`,
+);
+console.log(`discovery: resource=${pr.resource}`);
+
+const init = await rpc(  "initialize",
   {
     protocolVersion: "2025-06-18",
     capabilities: {},
