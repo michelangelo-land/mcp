@@ -74,21 +74,22 @@ document.getElementById("example").textContent =
  * - GET  /health → liveness, no auth
  * - GET  /.well-known/oauth-protected-resource → RFC 9728 discovery:
  *          declares which resource this worker protects (/ of THIS worker)
- *          and which authorization server protects it (the API wrapper).
+ *          and which authorization server protects it (the dedicated auth
+ *          host, auth.michelangelo.land).
  */
 const app = new Hono<{ Bindings: Env; Variables: AppVariables }>();
 
 app.get("/health", (c) => c.json({ ok: true, service: "michelangelo-mcp" }));
 
 // RFC 9728 — protected-resource metadata. `resource` is the root of this
-// worker (derived from the request origin: works on workers.dev today and
-// on the mcp.michelangelo.land custom domain); the authorization server
-// remains the API wrapper.
+// worker (derived from the request origin: works on workers.dev and on the
+// mcp.michelangelo.land custom domain); the authorization server is the
+// dedicated auth host (AUTH_BASE_URL), not the API.
 app.get("/.well-known/oauth-protected-resource", (c) => {
   const origin = new URL(c.req.url).origin;
   return c.json({
     resource: origin,
-    authorization_servers: [c.env.API_BASE_URL],
+    authorization_servers: [c.env.AUTH_BASE_URL],
     scopes_supported: ["email"],
     bearer_methods_supported: ["header"],
   });

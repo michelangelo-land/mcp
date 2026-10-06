@@ -15,9 +15,12 @@ workers_dev = true
 # RFC 9728 discovery is self-hosted (/.well-known/oauth-protected-resource,
 # same-origin), so no URL needs maintaining across domain changes.
 [vars]
-# Public API base URL (contract: michelangelo-api/openapi/v1.yaml).
-# Used both as the tool target and as the authorization_server in discovery.
+# Public API base URL (tool backend).
 API_BASE_URL = "https://api.michelangelo.land"
+# Dedicated auth host (OAuth discovery, authorize, token, JWKS).
+# Advertised as the authorization_server in RFC 9728 discovery; the API host
+# is only the tool backend.
+AUTH_BASE_URL = "https://auth.michelangelo.land"
 SUPABASE_URL = "https://hwtolnqskgrdgqpacdpi.supabase.co"
 
 [observability.logs]

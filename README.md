@@ -22,7 +22,11 @@ evaluation, and rate limiting all apply API-side.
 
 - **No secrets.** The worker holds no credentials of its own: the user's
   Bearer is validated against the public JWKS and forwarded to the API.
-  Only two public variables are configured (`API_BASE_URL`, `SUPABASE_URL`).
+  Only public variables are configured (`API_BASE_URL`, `AUTH_BASE_URL`,
+  `SUPABASE_URL`).
+- **Dedicated auth host.** OAuth (discovery, authorize, token, consent) runs
+  on `auth.michelangelo.land`, advertised as the authorization server in
+  RFC 9728 discovery; `api.michelangelo.land` is only the tool backend.
 - **MCP at the root.** `POST /` is the MCP endpoint (Bearer required, 401
   without one). `GET /` from a browser (no Bearer, `Accept: text/html`)
   shows a landing page; `GET /health` is a public liveness check.
@@ -56,5 +60,5 @@ npm run deploy   # → michelangelo-mcp.<account>.workers.dev
 ```
 
 Production runs at `https://mcp.michelangelo.land` (custom domain attached in
-the Cloudflare dashboard). Just keep `API_BASE_URL` pointed at production —
-discovery follows the domain on its own.
+the Cloudflare dashboard). Just keep `API_BASE_URL` and `AUTH_BASE_URL`
+pointed at production — discovery follows the domain on its own.

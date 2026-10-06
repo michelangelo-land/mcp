@@ -4,7 +4,8 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 /**
  * JWT auth middleware.
  *
- * - Minimal env: only SUPABASE_URL (+ API_BASE_URL for discovery).
+ * - Minimal env: SUPABASE_URL for JWKS validation (+ API_BASE_URL as the
+ *   tool backend, AUTH_BASE_URL as the advertised authorization server).
  * - `mcpAuth` derives the protected-resource document URL from the request
  *   origin (same-origin) instead of hardcoding it: it survives domain
  *   changes with no env to maintain.
@@ -21,6 +22,7 @@ export interface AuthUser {
 export interface Env {
   SUPABASE_URL: string;
   API_BASE_URL: string;
+  AUTH_BASE_URL: string;
 }
 
 export interface AppVariables {

@@ -1,3 +1,4 @@
 # Local values for `wrangler dev` (never commit the real file).
 SUPABASE_URL = "https://hwtolnqskgrdgqpacdpi.supabase.co"
 API_BASE_URL = "https://api.michelangelo.land"
+AUTH_BASE_URL = "https://auth.michelangelo.land"
