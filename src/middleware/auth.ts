@@ -2,20 +2,20 @@ import { createMiddleware } from "hono/factory";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 /**
- * Auth middleware — copia mirata di michelangelo-api/src/middleware/auth.ts.
+ * Auth middleware — focused copy of michelangelo-api/src/middleware/auth.ts.
  *
- * Differenze rispetto all'originale:
- * - Env ridotto: solo SUPABASE_URL (+ API_BASE_URL per il discovery).
- * - `mcpAuth` deriva l'URL del protected-resource document dall'origin della
- *   request (same-origin) invece di averlo hardcoded: sopravvive al cambio
- *   di dominio senza env da mantenere.
+ * Differences from the original:
+ * - Reduced env: only SUPABASE_URL (+ API_BASE_URL for discovery).
+ * - `mcpAuth` derives the protected-resource document URL from the request
+ *   origin (same-origin) instead of hardcoding it: it survives domain
+ *   changes with no env to maintain.
  */
 
 export interface AuthUser {
   id: string;
   clientId: string | null;
   scopes: string[];
-  /** Raw bearer token — inoltrato a /v1 così RLS/prompt/rate-limit applicano all'utente. */
+  /** Raw bearer token — forwarded to /v1 so RLS/prompt/rate-limit apply to the user. */
   token: string;
 }
 
@@ -42,10 +42,10 @@ function getJwks(supabaseUrl: string) {
 }
 
 /**
- * JWT auth per / (root) — 401 con `WWW-Authenticate: Bearer resource_metadata=…`
- * (MCP spec 2025-06-18 / RFC 9728) così i client scoprono il flusso OAuth.
- * L'URL del metadata document è same-origin (servito da questo stesso Worker
- * in `src/index.ts`), quindi sopravvive al cambio di dominio senza env.
+ * JWT auth for / (root) — 401 with `WWW-Authenticate: Bearer resource_metadata=…`
+ * (MCP spec 2025-06-18 / RFC 9728) so clients discover the OAuth flow.
+ * The metadata document URL is same-origin (served by this same worker
+ * in `src/index.ts`), so it survives domain changes with no env.
  */
 export const mcpAuth = createMiddleware<{
   Bindings: Env;

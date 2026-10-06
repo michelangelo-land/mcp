@@ -12,7 +12,7 @@ import { registerWaitForJob } from "./tools/waitForJob";
  * one server + transport per HTTP request — Workers hold no cross-request
  * state). Tools are pure clients of the public `/v1` contract, authenticated
  * as the end user through the injected ApiClient.
- * (Invariato da michelangelo-api/src/mcp/server.ts)
+ * (Unchanged from michelangelo-api/src/mcp/server.ts)
  */
 export function createMcpServer(api: ApiClient): McpServer {
   const server = new McpServer(

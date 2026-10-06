@@ -17,16 +17,16 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Polling helper over GET /v1/jobs/{jobId}.
- * (Logica invariata da michelangelo-api/src/mcp/tools/waitForJob.ts)
+ * (Logic unchanged from michelangelo-api/src/mcp/tools/waitForJob.ts)
  *
- * NOTA Worker standalone: ogni poll è ora una subrequest HTTPS reale verso
- * API_BASE_URL (nel monolite era `app.request()` in-process a costo zero).
- * Con backoff 5s→30s, un'attesa da 50s consuma ~4-5 subrequest: ampiamente
- * sotto il limite (1000/invocation). Per attese lunghe preferire chiamate
- * ripetute con `maxWaitSeconds` piccolo: il risultato `done:false` +
- * `next` dice all'agent di richiamare il tool. Il cap resta 600s ma una
- * singola request Worker non può vivere così a lungo (wall-time limit) —
- * il pattern client-side re-call è il modo supportato per build lunghe.
+ * Standalone-worker NOTE: every poll is now a real HTTPS subrequest to
+ * API_BASE_URL (in the monolith it was a zero-cost in-process `app.request()`).
+ * With 5s→30s backoff, a 50s wait costs ~4-5 subrequests: well under the
+ * limit (1000/invocation). For long waits, prefer repeated calls with a
+ * small `maxWaitSeconds`: the `done:false` + `next` result tells the agent
+ * to call the tool again. The cap stays 600s but a single worker request
+ * cannot live that long (wall-time limit) — the client-side re-call pattern
+ * is the supported way for long builds.
  */
 export function registerWaitForJob(server: McpServer, api: ApiClient): void {
   server.registerTool(

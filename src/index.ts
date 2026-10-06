@@ -8,13 +8,13 @@ import { createMcpServer } from "./mcp/server";
 type AppContext = Context<{ Bindings: Env; Variables: AppVariables }>;
 
 /**
- * Landing page per i browser: `GET /` senza Bearer e con `Accept: text/html`
- * mostra questa pagina (200, senza auth). I client MCP inviano
- * `Accept: application/json, text/event-stream` e passano dal flusso
- * autenticato (401 senza token, come da spec MCP / RFC 9728).
+ * Landing page for browsers: `GET /` without a Bearer token and with
+ * `Accept: text/html` serves this page (200, no auth). MCP clients send
+ * `Accept: application/json, text/event-stream` and go through the
+ * authenticated flow (401 without a token, per the MCP spec / RFC 9728).
  */
 const LANDING_HTML = `<!doctype html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,23 +34,23 @@ ul { padding-left: 1.25rem; }
 <body>
 <main>
 <h1>Michelangelo MCP</h1>
-<p class="muted">Server MCP (Streamable HTTP) — endpoint in root.</p>
-<p>Endpoint MCP: <code>POST <span id="endpoint"></span></code> con header
-<code>Authorization: Bearer &lt;jwt-supabase&gt;</code>.</p>
+<p class="muted">MCP server (Streamable HTTP) — endpoint at the root.</p>
+<p>MCP endpoint: <code>POST <span id="endpoint"></span></code> with header
+<code>Authorization: Bearer &lt;supabase-jwt&gt;</code>.</p>
 <ul>
-<li><a href="/health">/health</a> — liveness, senza auth</li>
-<li><a href="/.well-known/oauth-protected-resource">/.well-known/oauth-protected-resource</a> — discovery RFC 9728</li>
+<li><a href="/health">/health</a> — liveness, no auth</li>
+<li><a href="/.well-known/oauth-protected-resource">/.well-known/oauth-protected-resource</a> — RFC 9728 discovery</li>
 </ul>
 <pre id="example"></pre>
 </main>
 <script>
 document.getElementById("endpoint").textContent = location.origin;
 document.getElementById("example").textContent =
-  "# Esempio client MCP (Streamable HTTP)\\n" +
+  "# MCP client example (Streamable HTTP)\\n" +
   "curl -X POST " + location.origin + " \\\\\\n" +
   '  -H "Content-Type: application/json" \\\\\\n' +
   '  -H "Accept: application/json, text/event-stream" \\\\\\n' +
-  '  -H "Authorization: Bearer <jwt-supabase>" \\\\\\n' +
+  '  -H "Authorization: Bearer <supabase-jwt>" \\\\\\n' +
   '  -d \'{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}\'';
 </script>
 </body>
@@ -59,30 +59,30 @@ document.getElementById("example").textContent =
 /**
  * michelangelo-mcp — standalone MCP server (Streamable HTTP, stateless).
  *
- * Estratto da michelangelo-api/src/index.ts (blocco `/mcp`).
- * UNICA differenza architetturale: i tool non chiamano più `/v1` via
- * `app.request()` in-process, ma via `fetch()` HTTPS verso API_BASE_URL con
- * il Bearer dell'utente in passthrough. Restano quindi veri client del
- * contratto pubblico (openapi/v1.yaml): JWT→JWKS, RLS, prompt evaluation e
- * rate limit continuano ad applicarsi lato API.
+ * Extracted from michelangelo-api/src/index.ts (the `/mcp` block).
+ * The ONLY architectural difference: tools no longer call `/v1` via
+ * in-process `app.request()`, but via HTTPS `fetch()` to API_BASE_URL with
+ * the user's Bearer token in passthrough. They remain true clients of the
+ * public contract (openapi/v1.yaml): JWT→JWKS, RLS, prompt evaluation and
+ * rate limiting still apply API-side.
  *
  * Layout:
- * - POST /       → MCP server (uno McpServer + transport per request, auth)
- * - GET  /       → landing HTML per i browser (senza token + Accept
- *                   text/html); con Bearer resta endpoint MCP (stream SSE)
- * - GET  /health → liveness, senza auth
- * - GET  /.well-known/oauth-protected-resource → discovery RFC 9728:
- *          dichiara qual è la resource (/ di QUESTO worker) e quale
- *          authorization server la protegge (l'API Wrapper).
+ * - POST /       → MCP server (one McpServer + transport per request, auth)
+ * - GET  /       → landing HTML for browsers (no token + Accept
+ *                   text/html); with a Bearer it stays an MCP endpoint (SSE stream)
+ * - GET  /health → liveness, no auth
+ * - GET  /.well-known/oauth-protected-resource → RFC 9728 discovery:
+ *          declares which resource this worker protects (/ of THIS worker)
+ *          and which authorization server protects it (the API wrapper).
  */
 const app = new Hono<{ Bindings: Env; Variables: AppVariables }>();
 
 app.get("/health", (c) => c.json({ ok: true, service: "michelangelo-mcp" }));
 
-// RFC 9728 — protected-resource metadata. `resource` è la root di questo
-// Worker (derivato dall'origin della request: funziona su workers.dev oggi
-// e sul dominio custom mcp.michelangelo.land domani); l'authorization server
-// resta l'API Wrapper.
+// RFC 9728 — protected-resource metadata. `resource` is the root of this
+// worker (derived from the request origin: works on workers.dev today and
+// on the mcp.michelangelo.land custom domain); the authorization server
+// remains the API wrapper.
 app.get("/.well-known/oauth-protected-resource", (c) => {
   const origin = new URL(c.req.url).origin;
   return c.json({
@@ -93,8 +93,8 @@ app.get("/.well-known/oauth-protected-resource", (c) => {
   });
 });
 
-// Handler MCP condiviso: valida il Bearer via mcpAuth e inoltra a /v1 con
-// il token dell'utente in passthrough.
+// Shared MCP handler: validates the Bearer via mcpAuth and forwards to /v1
+// with the user's token in passthrough.
 const handleMcp = async (c: AppContext) => {
   const user = c.get("user");
   const api = new ApiClient(c.env.API_BASE_URL, user.token);
@@ -106,9 +106,9 @@ const handleMcp = async (c: AppContext) => {
   return await transport.handleRequest(c.req.raw);
 };
 
-// MCP in root (mcp.michelangelo.land, senza suffisso /mcp): auth applicata
-// solo a "/" così /health e /.well-known restano pubblici. OPTIONS senza
-// auth per non rompere il preflight CORS dei browser.
+// MCP at the root (mcp.michelangelo.land, no /mcp suffix): auth applies
+// only to "/" so /health and /.well-known stay public. OPTIONS without
+// auth so browser CORS preflights are not broken.
 app.options("/", cors(), (c) => c.newResponse(null, 204));
 app.post("/", cors(), mcpAuth, handleMcp);
 app.put("/", cors(), mcpAuth, handleMcp);
@@ -120,9 +120,9 @@ app.get(
   async (c, next) => {
     const hasAuth = c.req.header("Authorization") != null;
     const accept = c.req.header("Accept") ?? "";
-    // Navigazione browser: nessun token + pagina HTML attesa → landing.
-    // I client MCP (Accept: application/json, text/event-stream) e curl
-    // (Accept: */*) proseguono verso mcpAuth e prendono 401 senza token.
+    // Browser navigation: no token + HTML page expected → landing.
+    // MCP clients (Accept: application/json, text/event-stream) and curl
+    // (Accept: */*) fall through to mcpAuth and get 401 without a token.
     if (!hasAuth && accept.includes("text/html")) {
       return c.html(LANDING_HTML);
     }

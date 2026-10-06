@@ -1,13 +1,13 @@
 /**
- * Smoke test per michelangelo-mcp (standalone).
- * Uso: MCP_URL=http://localhost:8787 TOKEN=<jwt> node scripts/smoke-mcp.mjs
- * Verifica: initialize → tools/list (6 tool attesi) → tools/call whoami.
+ * Smoke test for michelangelo-mcp (standalone).
+ * Usage: MCP_URL=http://localhost:8787 TOKEN=<jwt> node scripts/smoke-mcp.mjs
+ * Checks: initialize → tools/list (6 expected tools) → tools/call whoami.
  */
 const MCP_URL = process.env.MCP_URL ?? "http://localhost:8787";
 const TOKEN = process.env.TOKEN;
 
 if (!TOKEN) {
-  console.error("Set TOKEN=<supabase-jwt> (stesso token che usi su /v1/whoami)");
+  console.error("Set TOKEN=<supabase-jwt> (same token you use for /v1/whoami)");
   process.exit(1);
 }
 
@@ -38,7 +38,7 @@ const pr = await prRes.json();
 assert(prRes.ok, `protected-resource HTTP ${prRes.status}`);
 assert(
   pr.resource === origin,
-  `resource inattesa: ${pr.resource}`,
+  `unexpected resource: ${pr.resource}`,
 );
 console.log(`discovery: resource=${pr.resource}`);
 
@@ -58,12 +58,12 @@ const names = list.tools.map((t) => t.name).sort();
 assert(
   JSON.stringify(names) ===
     JSON.stringify(["create_job", "get_job_status", "get_project", "list_projects", "wait_for_job", "whoami"]),
-  `tool inattesi: ${names.join(", ")}`,
+  `unexpected tools: ${names.join(", ")}`,
 );
 console.log(`tools: ${names.join(", ")}`);
 
 const who = await rpc("tools/call", { name: "whoami", arguments: {} }, 3);
-assert(who.structuredContent?.user_id, `whoami senza user_id: ${JSON.stringify(who).slice(0, 200)}`);
+assert(who.structuredContent?.user_id, `whoami without user_id: ${JSON.stringify(who).slice(0, 200)}`);
 console.log(`whoami user_id: ${who.structuredContent.user_id}`);
 
 console.log("SMOKE PASSED");

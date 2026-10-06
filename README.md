@@ -1,48 +1,48 @@
 # michelangelo-mcp
 
-Standalone MCP server di Michelangelo — Cloudflare Worker (Hono + Streamable HTTP, stateless).
+Michelangelo's standalone MCP server — Cloudflare Worker (Hono + Streamable HTTP, stateless).
 
-Estratto da `michelangelo-api/src/mcp/` (monolite in `~/Desktop/api`).
-Il server espone gli stessi 6 tool e resta un **vero client del contratto pubblico**
-(`michelangelo-api/openapi/v1.yaml`): ogni tool chiama `API_BASE_URL/v1/*`
-con il Bearer dell'utente in passthrough, quindi JWT→JWKS, RLS, prompt
-evaluation e rate limit continuano ad applicarsi lato API.
+Extracted from `michelangelo-api/src/mcp/`. The server exposes the same 6 tools and stays a **true client of the public contract**
+(`michelangelo-api/openapi/v1.yaml`): every tool calls `API_BASE_URL/v1/*`
+with the user's Bearer in passthrough, so JWT→JWKS, RLS, prompt
+evaluation, and rate limiting keep applying API-side.
 
-## Tool (replica 1:1)
+## Tools (1:1 replica)
 
-| Tool | Mappa su |
+| Tool | Maps to |
 |---|---|
 | `whoami` | `GET /v1/whoami` |
 | `list_projects` | `GET /v1/projects?limit&cursor&visibility` |
 | `get_project` | `GET /v1/projects/{projectId}` |
 | `create_job` | `POST /v1/jobs` (`type: prompt`) |
 | `get_job_status` | `GET /v1/jobs/{jobId}` |
-| `wait_for_job` | poll `GET /v1/jobs/{jobId}` con backoff 5s→30s, `done:false` + re-call |
+| `wait_for_job` | polls `GET /v1/jobs/{jobId}` with 5s→30s backoff, `done:false` + re-call |
 
-## Differenze rispetto al monolite
+## Differences from the monolith
 
-1. **`src/mcp/client.ts`** — prima wrapper su `app.request()` in-process (zero
-   rete); ora `fetch(API_BASE_URL + path)` con passthrough del Bearer.
-2. **`src/middleware/auth.ts`** — copia ridotta di `api/src/middleware/auth.ts`:
-   solo `SUPABASE_URL` + `API_BASE_URL`; il 401 annuncia il protected-resource
-   document same-origin servito da questo stesso Worker.
-3. **`src/index.ts`** — solo `/` (MCP in root) + `/health`, nessuna route `/v1`, `/auth`,
-   `/oauth`. `GET /` da browser (senza Bearer, `Accept: text/html`) mostra una
-   landing HTML; i client MCP usano `POST /` con Bearer (401 senza token).
-4. **`wait_for_job`** — ogni poll è ora una subrequest reale (~4-5 per 50s,
-   ok sotto il limite 1000). Per build lunghe usare re-call con
-   `maxWaitSeconds` piccolo (pattern `done:false`).
+1. **`src/mcp/client.ts`** — previously a wrapper over in-process `app.request()`
+   (zero network); now `fetch(API_BASE_URL + path)` with Bearer passthrough.
+2. **`src/middleware/auth.ts`** — trimmed copy of `api/src/middleware/auth.ts`:
+   only `SUPABASE_URL` + `API_BASE_URL`; the 401 advertises the same-origin
+   protected-resource document served by this same worker.
+3. **`src/index.ts`** — only `/` (MCP at the root) + `/health`, no `/v1`, `/auth`,
+   `/oauth` routes. `GET /` from a browser (no Bearer, `Accept: text/html`)
+   shows a landing HTML page; MCP clients use `POST /` with a Bearer (401
+   without a token).
+4. **`wait_for_job`** — every poll is now a real subrequest (~4-5 per 50s,
+   well under the 1000 limit). For long builds, re-call with a small
+   `maxWaitSeconds` (the `done:false` pattern).
 
-## Sviluppo
+## Development
 
 ```bash
-cp .dev.vars.example .dev.vars   # mai committare .dev.vars
+cp .dev.vars.example .dev.vars   # never commit .dev.vars
 npm install
 npm run type-check
 npm run dev                      # wrangler dev → http://localhost:8787
 ```
 
-Smoke test contro un'istanza (di default il dev locale):
+Smoke test against an instance (local dev by default):
 
 ```bash
 MCP_URL=http://localhost:8787 TOKEN=<supabase-jwt> node scripts/smoke-mcp.mjs
@@ -54,19 +54,20 @@ MCP_URL=http://localhost:8787 TOKEN=<supabase-jwt> node scripts/smoke-mcp.mjs
 npm run deploy   # → michelangelo-mcp.<account>.workers.dev
 ```
 
-Poi (quando pronto il DNS):
+Production runs at `https://mcp.michelangelo.land` (custom domain attached in
+the Cloudflare dashboard).
 
-1. Aggiungere la route `mcp.michelangelo.land` in `wrangler.toml`.
-2. Nessun cambio discovery: `/.well-known/oauth-protected-resource` e il
-   `WWW-Authenticate` dei 401 sono same-origin e seguono il dominio da soli.
-3. Allineare `API_BASE_URL` a produzione.
+No discovery changes are needed per domain:
+`/.well-known/oauth-protected-resource` and the 401 `WWW-Authenticate` are
+same-origin and follow the domain on their own. Just keep `API_BASE_URL`
+pointed at production.
 
-## Sincronizzazione col monolite
+## Syncing with the monolith
 
-File da tenere allineati con `~/Desktop/api/src/mcp/`:
+Keep these files aligned with `michelangelo-api/src/mcp/`:
 
 - `src/mcp/server.ts`, `src/mcp/result.ts`, `src/mcp/tools/*.ts`
 - `src/middleware/auth.ts` ↔ `api/src/middleware/auth.ts` (`createAuth`/`mcpAuth`)
 
-L'unico file volutamente divergente è `src/mcp/client.ts` (fetch remoto vs
-`app.request()` in-process).
+The only intentionally divergent file is `src/mcp/client.ts` (remote fetch vs
+in-process `app.request()`).
