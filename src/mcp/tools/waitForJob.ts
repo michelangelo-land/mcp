@@ -17,10 +17,9 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Polling helper over GET /v1/jobs/{jobId}.
- * (Logic unchanged from michelangelo-api/src/mcp/tools/waitForJob.ts)
  *
- * Standalone-worker NOTE: every poll is now a real HTTPS subrequest to
- * API_BASE_URL (in the monolith it was a zero-cost in-process `app.request()`).
+ * Standalone-worker NOTE: every poll is a real HTTPS subrequest to
+ * API_BASE_URL (previously a zero-cost in-process `app.request()`).
  * With 5s→30s backoff, a 50s wait costs ~4-5 subrequests: well under the
  * limit (1000/invocation). For long waits, prefer repeated calls with a
  * small `maxWaitSeconds`: the `done:false` + `next` result tells the agent

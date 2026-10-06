@@ -2,7 +2,6 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 /**
  * Maps an API (`/v1`) HTTP response to an MCP tool result.
- * (Unchanged from michelangelo-api/src/mcp/result.ts)
  *
  * - 2xx → JSON body both as pretty-printed text content and as
  *   `structuredContent` (wrapped in `{ data: ... }` when it is not an object).

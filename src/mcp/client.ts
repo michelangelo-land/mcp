@@ -1,14 +1,11 @@
 /**
  * ApiClient — the only way the MCP server reaches the Michelangelo API.
  *
- * ADAPTED from michelangelo-api/src/mcp/client.ts for the standalone worker:
- * - before: thin wrapper over an injected fetcher (`app.request()`,
- *   in-process, zero network hops);
- * - now: HTTPS `fetch()` to API_BASE_URL with the user's Bearer in
- *   passthrough. Every tool call still goes through the `/v1` middleware
- *   chain (JWT validation via JWKS, PostgREST as the user with RLS, prompt
- *   evaluation, rate limiting). The MCP layer remains a true client of the
- *   public contract (ADR 0001 / D5), never a shortcut.
+ * Every tool call is an HTTPS `fetch()` to API_BASE_URL with the user's
+ * Bearer in passthrough, so it still goes through the `/v1` middleware
+ * chain (JWT validation via JWKS, PostgREST as the user with RLS, prompt
+ * evaluation, rate limiting). The MCP layer remains a true client of the
+ * public contract, never a shortcut.
  */
 export class ApiClient {
   constructor(

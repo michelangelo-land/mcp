@@ -2,10 +2,9 @@ import { createMiddleware } from "hono/factory";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 /**
- * Auth middleware — focused copy of michelangelo-api/src/middleware/auth.ts.
+ * JWT auth middleware.
  *
- * Differences from the original:
- * - Reduced env: only SUPABASE_URL (+ API_BASE_URL for discovery).
+ * - Minimal env: only SUPABASE_URL (+ API_BASE_URL for discovery).
  * - `mcpAuth` derives the protected-resource document URL from the request
  *   origin (same-origin) instead of hardcoding it: it survives domain
  *   changes with no env to maintain.

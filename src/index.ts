@@ -59,8 +59,9 @@ document.getElementById("example").textContent =
 /**
  * michelangelo-mcp — standalone MCP server (Streamable HTTP, stateless).
  *
- * Extracted from michelangelo-api/src/index.ts (the `/mcp` block).
- * The ONLY architectural difference: tools no longer call `/v1` via
+ * This worker is the canonical home of the MCP server (previously embedded
+ * in the Michelangelo API service, where it has since been removed).
+ * The ONLY architectural difference from the embedded version: tools no
  * in-process `app.request()`, but via HTTPS `fetch()` to API_BASE_URL with
  * the user's Bearer token in passthrough. They remain true clients of the
  * public contract (openapi/v1.yaml): JWT→JWKS, RLS, prompt evaluation and

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-    "description": "Michelangelo MCP server — standalone Cloudflare Worker (Streamable HTTP). Thin client of https://api.michelangelo.land/v1, extracted from michelangelo-api/src/mcp.",
+    "description": "Michelangelo MCP server — standalone Cloudflare Worker (Streamable HTTP). Thin client of https://api.michelangelo.land/v1.",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
