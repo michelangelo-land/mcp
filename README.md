@@ -1,4 +1,4 @@
-# michelangelo-mcp
+# Michelangelo Land MCP
 
 Standalone MCP server for Michelangelo — Cloudflare Worker (Hono + Streamable HTTP, stateless).
 
